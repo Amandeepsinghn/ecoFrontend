@@ -2,7 +2,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.db.models import Order, Product, Order_Item
+from app.db.models import Order, Product, Order_Item, User
 from app.schemas.order import OrderCreate
 
 
@@ -52,6 +52,20 @@ def create_order(
             for item in order_data.items
         )
 
+        user = (
+            db.query(User)
+            .filter(User.id == user_id)
+            .with_for_update()
+            .first()
+        )
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        balance = float(user.credit or 0)
+        if balance < total_price:
+            raise HTTPException(status_code=400, detail="Insufficient credit")
+
+        user.credit = balance - total_price
 
         order = Order(
             user_id=user_id,
@@ -79,6 +93,7 @@ def create_order(
 
         db.commit()
         db.refresh(order)
+        order.credit = user.credit
 
         return order
 

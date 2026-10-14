@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin
@@ -18,11 +18,11 @@ def update_user_role(user_id: int, role_data: AdminRoleUpdate, db: Session = Dep
             status_code=400,
             detail="You cannot change your own admin role",
         )
-    return update_user_admin_status(db, user_id, role_data.is_admin)
+    return admin_services.update_admin_status(db, user_id, role_data.is_admin)
 
 @router.post("/products", response_model=AdminProductCreateReasponse, status_code=201)
 def create_product(product_data: AdminProductCreate, db:Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
-    return admin_services.create_product(db, product_data)
+    return admin_services.create_product(db, product_data, current_admin.id)
 
 @router.get("/products", response_model=list[AdminProductCreateReasponse])
 def get_all_products(db:Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
@@ -34,13 +34,31 @@ def get_product(product_id : int, db: Session = Depends(get_db), current_admin: 
 
 @router.patch("/products/{product_id}", response_model=AdminProductCreateReasponse)
 def update_product(product_id: int, product_data: AdminProductUpdate,db: Session = Depends(get_db), current_admin: User= Depends(get_current_admin)):
-    return admin_services.AdminProductUpdate(db, product_id, product_data)
+    return admin_services.update_product(db, product_id, product_data)
 
 @router.patch("/products/{product_id}/stock", response_model= AdminProductCreateReasponse)
 def update_stock(product_id: int, stock_data: AdminStockUpdate, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
     return admin_services.update_product_stock(db, product_id, stock_data.stock)
 
-@router.delete("/products,{product_id}", status_code=204)
+@router.post("/products/{product_id}/photos", response_model=AdminProductCreateReasponse, status_code=201)
+def upload_product_photos(
+    product_id: int,
+    files: list[UploadFile] = File(...),
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    return admin_services.add_product_photos(db, product_id, files)
+
+@router.delete("/products/{product_id}/photos/{photo_id}", status_code=204)
+def delete_product_photo(
+    product_id: int,
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    admin_services.delete_product_photo(db, product_id, photo_id)
+
+@router.delete("/products/{product_id}", status_code=204)
 def delete_product(product_id: int, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
     admin_services.delete_product(db, product_id)
 

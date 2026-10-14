@@ -13,5 +13,9 @@ class Settings:
         os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
     ) #how long it will remain valid
 
+    cloudinary_cloud_name: str = os.getenv("CLOUDINARY_CLOUD_NAME")
+    cloudinary_api_key: str = os.getenv("CLOUDINARY_API_KEY")
+    cloudinary_api_secret: str = os.getenv("CLOUDINARY_API_SECRET")
+
 
 settings = Settings()

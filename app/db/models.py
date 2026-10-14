@@ -11,7 +11,7 @@ class User(Base):
     email = Column(String, unique = True, nullable = False)
     password = Column(String, nullable = True)
 
-    credit = Column(Integer, default=1000, nullable= True)
+    credit = Column(Float, default=1000, nullable= True)
     is_admin = Column(Boolean, default=False, nullable=False)
 
     products = relationship("Product", back_populates ="owner")
@@ -29,6 +29,23 @@ class Product(Base):
 
     user_id = Column(Integer, ForeignKey("users.id"))
     owner = relationship("User", back_populates = "products")
+    photos = relationship(
+        "ProductPhoto",
+        back_populates="product",
+        cascade="all, delete-orphan",
+        order_by="ProductPhoto.id",
+    )
+
+
+class ProductPhoto(Base):
+    __tablename__ = "product_photos"
+
+    id = Column(Integer, primary_key=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
+    url = Column(String, nullable=False)
+    public_id = Column(String, nullable=False)
+
+    product = relationship("Product", back_populates="photos")
 
 
 class Order(Base):

@@ -21,4 +21,7 @@ class OrderResponse(BaseModel):
     id: int
     total_price: float
     status: str
+    credit: float
     items: list[OrderItemResponse]
+
+    model_config = ConfigDict(from_attributes=True)
