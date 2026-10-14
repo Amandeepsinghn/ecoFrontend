@@ -15,6 +15,7 @@ class AdminProductUpdate(BaseModel):
     price: float | None = Field(default= None, gt = 0)
     stock: int | None = Field(default = None, ge = 0)
     description : str | None= None
+    product_type: str | None = None
 
 class AdminStockUpdate(BaseModel):
 

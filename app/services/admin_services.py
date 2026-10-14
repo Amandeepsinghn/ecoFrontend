@@ -31,7 +31,12 @@ def delete_user_admin(db:Session, user_id: int) -> None:
     db.delete(user)
     db.commit()
 
-def create_product(db:Session, product_data: AdminProductCreate, user_id: int) -> Product:
+def create_product(
+    db: Session,
+    product_data: AdminProductCreate,
+    user_id: int,
+    files: list[UploadFile] | None = None,
+) -> Product:
     product = Product(name= product_data.name, 
                       price = product_data.price, 
                       stock = product_data.stock, 
@@ -43,7 +48,10 @@ def create_product(db:Session, product_data: AdminProductCreate, user_id: int) -
     db.commit()
     db.refresh(product)
 
-    return product
+    if files:
+        return add_product_photos(db, product.id, files)
+
+    return get_product_by_id(db, product.id)
 
 def get_all_products(db:Session)-> list[Product]:
     return (

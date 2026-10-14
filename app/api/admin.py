@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
+from fastapi import APIRouter, HTTPException, Depends, File, Form, UploadFile
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, get_current_admin
@@ -21,8 +21,30 @@ def update_user_role(user_id: int, role_data: AdminRoleUpdate, db: Session = Dep
     return admin_services.update_admin_status(db, user_id, role_data.is_admin)
 
 @router.post("/products", response_model=AdminProductCreateReasponse, status_code=201)
-def create_product(product_data: AdminProductCreate, db:Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
-    return admin_services.create_product(db, product_data, current_admin.id)
+def create_product(
+    name: str = Form(...),
+    price: float = Form(...),
+    stock: int = Form(...),
+    description: str | None = Form(None),
+    product_type: str | None = Form(None),
+    files: list[UploadFile] = File(default=[]),
+    db: Session = Depends(get_db),
+    current_admin: User = Depends(get_current_admin),
+):
+    product_data = AdminProductCreate(
+        name=name,
+        price=price,
+        stock=stock,
+        description=description,
+        product_type=product_type,
+    )
+    uploads = [file for file in files if file.filename]
+    return admin_services.create_product(
+        db,
+        product_data,
+        current_admin.id,
+        files=uploads or None,
+    )
 
 @router.get("/products", response_model=list[AdminProductCreateReasponse])
 def get_all_products(db:Session = Depends(get_db), current_admin: User = Depends(get_current_admin)):
